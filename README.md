@@ -1,6 +1,8 @@
 # SyncfusionTreeGrid
 
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 12.2.6.
+Syncfusion EJ2 Angular TreeGrid
+with custom Context Menu
 
 ## Development server
 
