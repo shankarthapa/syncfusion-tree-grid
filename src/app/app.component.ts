@@ -1,7 +1,7 @@
-import { AfterViewInit, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
 import {
   ContextMenuItem, ContextMenuService, EditService, EditSettingsModel, ExcelExportService,
-  PageService, PdfExportService, ResizeService, SortService, SelectionSettingsModel, ToolbarItems, TreeGridComponent
+  PageService, PdfExportService, ResizeService, SortService, SelectionSettingsModel, ToolbarItems, TreeGridComponent, extendArray, ITreeData
 } from '@syncfusion/ej2-angular-treegrid';
 import { MenuEventArgs } from '@syncfusion/ej2-navigations';
 import { getValue, isNullOrUndefined } from '@syncfusion/ej2-base';
@@ -12,6 +12,7 @@ import { sampleData } from './datasource';
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
+  encapsulation: ViewEncapsulation.None,
   providers: [ContextMenuService, PageService, ResizeService, SortService, EditService,
     PdfExportService, ExcelExportService]
 })
@@ -30,10 +31,10 @@ export class AppComponent implements OnInit, AfterViewInit {
     { text: "Resize", target: ".e-columnheader", id: "resize" },
 
     { text: "Enable Multi Select", target: ".e-content", id: "multi" },
-    { text: "Copy", target: ".e-content", id: "copy" }
-    // { text: "Cut", target: ".e-content", id: "cut" },
-    // { text: "Paste Sibling", target: ".e-content", id: "pasteSib" },
-    // { text: "Paste Child", target: ".e-content", id: "pasteChild" }
+    { text: "Copy", target: ".e-content", id: "copy" },
+    { text: "Cut", target: ".e-content", id: "cut" },
+    { text: "Paste Sibling", target: ".e-content", id: "pasteSib" },
+    { text: "Paste Child", target: ".e-content", id: "pasteChild" }
   ];
   public toolbar: ToolbarItems[] = [];
   @ViewChild('treegrid') treeGridObj = {} as any;
@@ -49,20 +50,39 @@ export class AppComponent implements OnInit, AfterViewInit {
   rowDrop = {};
   copiedRecord: any = null;
   cutRecord: any = null;
+  customAttributes: any = null;
 
   ngOnInit(): void {
     this.data = sampleData; // .concat(sampleData, sampleData);
     this.toolbar = ['Add', 'Edit', 'Delete', 'Update', 'Cancel'];
+    this.customAttributes = { class: 'customcss' };
   }
 
   ngAfterViewInit() {
     this.selectionOptions = { cellSelectionMode: 'Box', type: 'Multiple', mode: 'Cell' };
     this.editSettings = { allowEditing: false, allowAdding: false, allowDeleting: false };
-    
+    this.treeGridObj.dataStateChange.subscribe((args: any) => {
+      console.log('daata changed   ', args);
+    });
+    this.treeGridObj.rowDataBound.subscribe((args: any) => {
+      // console.log('cmere eree  ', args);
+      if (!(args.data as ITreeData).hasChildRecords) {
+        if (this.copiedRecord) {
+          if (this.copiedRecord.taskID === args.data.taskID) {
+            (args.row as HTMLElement).style.backgroundColor = 'green';
+          }
+        }
+      }
+    });
+
     this.treeGridObj.contextMenuClick.subscribe((a: any, b: any, c: any) => {
-      console.log('came here A ', a);
+      // console.log('came here A ', a.rowInfo);
+      // console.log('came here B ', b);
+      // console.log('came here C ', c);
       const { id } = a.item;
       let isReload = true;
+      const tree = this.treeGridObj as TreeGridComponent;
+      const dataSource = extendArray((this.treeGridObj as TreeGridComponent).dataSource as object[]);
       switch (id) {
         case 'freeze':
           if (this.frozenCol === 0) {
@@ -98,18 +118,33 @@ export class AppComponent implements OnInit, AfterViewInit {
         case 'copy':
           isReload = false;
           this.cutRecord = null;
-          this.copiedRecord = a.rowInfo.rowData;
+          this.copiedRecord = null;
+          this.copiedRecord = a.rowInfo;
+          this.clearSelection();
+
+          (a.rowInfo.row as HTMLElement).style.outline = 'auto';
+          (a.rowInfo.row as HTMLElement).style.outlineColor = 'green';
+          // (this.treeGridObj as TreeGridComponent).dataSource = dataSource;
           this.treeGridObj.copy();
           break;
         case 'cut':
+          isReload = false;
           this.copiedRecord = null;
-          this.cutRecord = a.rowInfo.rowData;
+          this.cutRecord = null;
+          this.cutRecord = a.rowInfo;
+          this.clearSelection();
+
+          (a.rowInfo.row as HTMLElement).style.outline = 'auto';
+          (a.rowInfo.row as HTMLElement).style.outlineColor = 'red';
+          this.treeGridObj.copy();
           break;
         case 'pasteSib':
-          this.pasteSib(a.rowInfo.rowData);
+          isReload = false;
+          this.pasteSib(a.rowInfo, dataSource);
           break;
         case 'pasteChild':
-          this.pasteChild();
+          isReload = false;
+          this.pasteChild(a.rowInfo, dataSource);
           break;
       }
       if (isReload) {
@@ -118,23 +153,99 @@ export class AppComponent implements OnInit, AfterViewInit {
           this.reShuffle = false;
         }, 200);
       }
-      
+      // this.treeGridObj.refreshColumns();
+      // (this.treeGridObj as TreeGridComponent).dataSource = dataSource;
+      // (dataSource as object[]).unshift({ TaskID: 99, TaskName: "New Data", StartDate: new Date('02/03/2017'), EndDate: new Date('04/04/2017'), Duration: 10, Priority: "High" }); // Add record.
+      // (this.treeGridObj as TreeGridComponent).dataSource = dataSource; // Refresh the TreeGrid.
     });
   }
 
-  pasteSib(current: any) {
-    if (this.copiedRecord) {
-      const currentParentItem = current.parentItem;
-      const currentMatched = this.data.find((a: any) => a.taskID === currentParentItem.taskID);
-      if (currentMatched) {
-        const idxC = this.data.indexOf(currentMatched);
-        this.data.splice(idxC + 1, 0, this.copiedRecord.taskData);
+  clearSelection() {
+    const rowList: Array<any> = this.treeGridObj.getRows();
+    rowList.forEach((row) => {
+      (row as HTMLElement).style.outline = 'none';
+      (row as HTMLElement).style.outlineColor = 'none';
+    });
+  }
+
+  pasteSib(current: any, _dataSource: any) {
+    // const current.rowIndex;
+    let rowItem = _dataSource.find((a: any) => a.taskID === current.rowData.taskID);
+    if (!rowItem) {
+      rowItem = _dataSource.find((a: any) => a.taskID === current.rowData.parentItem.taskID);
+    }
+    if (this.copiedRecord && rowItem) {
+      const idxC = _dataSource.indexOf(rowItem);
+      if (idxC > -1) {
+        (_dataSource as object[]).splice(idxC + 1, 0, this.copiedRecord.rowData.taskData);
+        (this.treeGridObj as TreeGridComponent).dataSource = _dataSource;
+        this.copiedRecord = null;
+      }
+    }
+    if (this.cutRecord && rowItem) {
+      let cutItem = _dataSource.find((a: any) => a.taskID === this.cutRecord.rowData.taskID);
+      let isParent = true;
+      if (!cutItem) {
+        isParent = false;
+        cutItem = _dataSource.find((a: any) => a.taskID === this.cutRecord.rowData.parentItem.taskID);
+      }
+      const idxC = _dataSource.indexOf(rowItem);
+      const cutIdx = _dataSource.indexOf(cutItem);
+      if (idxC > -1) {
+        (_dataSource as object[]).splice(idxC + 1, 0, this.cutRecord.rowData.taskData);
+        if (isParent) {
+          (_dataSource as object[]).splice(cutIdx, 1);
+        } else {
+          (_dataSource[cutIdx].subtasks as object[]).splice(cutIdx, 1);
+        }
+        (this.treeGridObj as TreeGridComponent).dataSource = _dataSource;
+        this.cutRecord = null;
       }
     }
   }
 
-  pasteChild() {
+  pasteChild(current: any, _dataSource: any) {
+    let rowItem = _dataSource.find((a: any) => a.taskID === current.rowData.taskID);
+    if (!rowItem) {
+      rowItem = _dataSource.find((a: any) => a.taskID === current.rowData.parentItem.taskID);
+    }
+    if (this.copiedRecord && rowItem) {
+      const idxC = _dataSource.indexOf(rowItem);
+      if (idxC > -1) {
+        (_dataSource[idxC].subtasks as object[]).push(this.copiedRecord.rowData.taskData);
+        (this.treeGridObj as TreeGridComponent).dataSource = _dataSource;
+        this.copiedRecord = null;
+      }
+    }
 
+    if (this.cutRecord && rowItem) {
+      let cutItem = _dataSource.find((a: any) => a.taskID === this.cutRecord.rowData.taskID);
+      let isParent = true;
+      if (!cutItem) {
+        isParent = false;
+        cutItem = _dataSource.find((a: any) => a.taskID === this.cutRecord.rowData.parentItem.taskID);
+      }
+      const idxC = _dataSource.indexOf(rowItem);
+      const cutIdx = _dataSource.indexOf(cutItem);
+      if (idxC > -1) {
+        (_dataSource[idxC].subtasks as object[]).push(this.cutRecord.rowData.taskData);
+        if (cutIdx > -1) {
+          if (isParent) {
+            (_dataSource as object[]).splice(cutIdx, 1);
+          } else {
+            (_dataSource[cutIdx].subtasks as object[]).splice(cutIdx, 1);
+          }
+        }
+        (this.treeGridObj as TreeGridComponent).dataSource = _dataSource;
+        this.cutRecord = null;
+      }
+    }
+  }
+
+  rowDataBound(args: any) {
+    if (!(args.data as ITreeData).hasChildRecords) {
+      (args.row as HTMLElement).style.backgroundColor = 'green';
+    }
   }
 
   getMultiSelection() {
