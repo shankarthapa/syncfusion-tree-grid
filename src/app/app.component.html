@@ -1,14 +1,14 @@
-<div *ngIf="!reShuffle">
-  <ejs-treegrid id="treegrid" #treegrid [dataSource]='data' [contextMenuItems]='contextMenuItems'
+<div>
+  <ejs-treegrid *ngIf="!reShuffle" id="treegrid" #treegrid [dataSource]='data' [contextMenuItems]='contextMenuItems'
     [treeColumnIndex]='1' pageSettings='pager' childMapping='subtasks' [allowResizing]='hasResize'
     [frozenColumns]='frozenCol' [allowSorting]='hasSorting' [allowMultiSorting]='hasSorting'
     [allowFiltering]='hasFilter' [toolbar]='getEditOption()' [editSettings]='editSettings'
     [allowRowDragAndDrop]='hasDragDrop' [rowDropSettings]='rowDrop' [selectionSettings]='getMultiSelection()'>
     <e-columns>
-      <e-column field='taskID' headerText='Task ID' textAlign='Right' width=70></e-column>
-      <e-column field='taskName' headerText='Task Name' textAlign='Left' width=200></e-column>
-      <e-column field='startDate' headerText='Start Date' textAlign='Right' format='yMd' width=90></e-column>
-      <e-column field='duration' headerText='Duration' textAlign='Right' width=80></e-column>
+      <e-column [textAlign]='c1TextAlign' field='taskID' headerText='Task ID' [textAlign]='c1TextAlign' width=70></e-column>
+      <e-column [textAlign]='c2TextAlign' [customAttributes]='customAttributes' field='taskName' headerText='Task Name' textAlign='Left' width=200></e-column>
+      <e-column [textAlign]='c3TextAlign' field='startDate' headerText='Start Date' textAlign='Right' format='yMd' width=90></e-column>
+      <e-column [textAlign]='c4TextAlign' field='duration' headerText='Duration' [filterBarTemplate]="filterBarTemplate" textAlign='Right' width=80></e-column>
     </e-columns>
   </ejs-treegrid>
 </div>

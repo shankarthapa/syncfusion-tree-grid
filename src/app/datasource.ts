@@ -15,7 +15,7 @@ export let sampleData: Object[] = [
         approved: false,
         isInExpandState: true,
         subtasks: [
-            { taskID: 2, taskName: 'Plan timeline', startDate: new Date('02/03/2017'), endDate: new Date('02/07/2017'), duration: 5, progress: 100, priority: 'Normal', approved: false },
+            { taskID: 2, taskName: 'Plan timeline Plan timeline Plan timelinePlan timeline Plan timeline Plan timelinePlan timeline Plan timeline Plan timelinePlan timeline Plan timeline Plan timelinePlan timeline Plan timeline Plan timelinePlan timeline Plan timeline Plan timeline', startDate: new Date('02/03/2017'), endDate: new Date('02/07/2017'), duration: 5, progress: 100, priority: 'Normal', approved: false },
             { taskID: 3, taskName: 'Plan budget', startDate: new Date('02/03/2017'), endDate: new Date('02/07/2017'), duration: 5, progress: 100, approved: true },
             { taskID: 4, taskName: 'Allocate resources', startDate: new Date('02/03/2017'), endDate: new Date('02/07/2017'), duration: 5, progress: 100, priority: 'Critical', approved: false },
             { taskID: 5, taskName: 'Planning complete', startDate: new Date('02/07/2017'), endDate: new Date('02/07/2017'), duration: 0, progress: 0, priority: 'Low', approved: true }

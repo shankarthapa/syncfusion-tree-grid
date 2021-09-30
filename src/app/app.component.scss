@@ -1,9 +1,29 @@
-// .e-treegrid .e-headercell.customcss{
-//     background-color: #2382c3;
-//     color: white;
-//     font-family: 'Bell MT';
-//     font-size: '20px';
-// }
+.e-treegrid .e-headercell.customcss{
+    background-color: #2382c3;
+    font-family: 'Bell MT';
+    font-size: 20px;
+}
+
+.e-treegrid .e-rowcell.customcss{
+    background-color: #ecedee;
+    font-family: 'Bell MT';
+    font-size: 20px;
+    color: red;
+}
+
+.e-treegrid .e-rowcell.customFont{
+    font-size: 20px;
+}
+.e-treegrid .e-rowcell.defaultFont{
+    font-size: 13px;
+}
+
+.e-treegrid .e-rowcell.customColor{
+    color: red !important;
+}
+.e-treegrid .e-rowcell.defaultColor{
+    color: black !important;
+}
 
 .e-row {
     // outline: auto;
